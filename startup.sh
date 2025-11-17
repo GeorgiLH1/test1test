@@ -72,11 +72,15 @@ aws s3 cp "$BUCKET/workflow-flux-dev-de-distilled-ultra-realistic-detailed-portr
     user/default/workflows/ --endpoint-url "$ENDPOINT"
 
 ########################################
-# 7. SYNC custom_nodes (NO DELETIONS)
+# 7. Download custom_nodes (NO LOOPS)
 ########################################
 
-echo "Syncing custom_nodes without deleting anything..."
-aws s3 sync "$BUCKET/custom_nodes/" custom_nodes/ --exact-timestamps --endpoint-url "$ENDPOINT"
+echo "Downloading custom_nodes (forced mode, no loop)..."
+aws s3 cp "$BUCKET/custom_nodes/" custom_nodes/ \
+    --recursive \
+    --no-progress \
+    --only-show-errors \
+    --endpoint-url "$ENDPOINT"
 
 ########################################
 # 8. Start ComfyUI
