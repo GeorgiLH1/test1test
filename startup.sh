@@ -55,7 +55,6 @@ BUCKET="s3://8v3x4ixqu5"
 ########################################
 # 6. Download models from S3
 ########################################
-
 aws s3 cp "$BUCKET/consolidated_s6700.safetensors" models/diffusion_models/ --endpoint-url "$ENDPOINT"
 
 aws s3 cp "$BUCKET/FluxRealismLora.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
@@ -72,19 +71,16 @@ aws s3 cp "$BUCKET/workflow-flux-dev-de-distilled-ultra-realistic-detailed-portr
     user/default/workflows/ --endpoint-url "$ENDPOINT"
 
 ########################################
-# 7. Download custom_nodes (NO LOOPS)
+# 7. Download custom_nodes (NO LOOP FIX)
 ########################################
-
-echo "Downloading custom_nodes (forced mode, no loop)..."
+echo "Downloading custom_nodes safely (loop-free)..."
 aws s3 cp "$BUCKET/custom_nodes/" custom_nodes/ \
     --recursive \
-    --no-progress \
-    --only-show-errors \
+    --exclude ".git/*" \
+    --exclude ".git*" \
     --endpoint-url "$ENDPOINT"
 
 ########################################
 # 8. Start ComfyUI
 ########################################
-nohup python main.py --listen --port 8188 > comfyui.log 2>&1 &
-
-echo "ComfyUI started on port 8188"
+python main.py --listen --port 8188
