@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ########################################
-# 1. System packages
+# 1. Install system dependencies
 ########################################
 apt-get update -qq && apt-get install -yq \
     python3 python3-pip git git-lfs unzip wget curl vim nano \
@@ -13,9 +13,10 @@ pip install --upgrade pip
 ########################################
 # 2. Install AWS CLI v2
 ########################################
-wget https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+wget -q https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
 unzip -q awscli-exe-linux-x86_64.zip
 ./aws/install
+export PATH=$PATH:/usr/local/bin
 rm -rf aws awscli-exe-linux-x86_64.zip
 
 ########################################
@@ -26,13 +27,10 @@ if [ ! -d "/workspace/ComfyUI" ]; then
 fi
 
 cd /workspace/ComfyUI
-git config --global --add safe.directory /workspace/ComfyUI
 git pull
-git lfs install
-git lfs pull
 
 ########################################
-# 4. Create required folders
+# 4. Create required folders (INSIDE ComfyUI)
 ########################################
 mkdir -p models/diffusion_models
 mkdir -p models/loras
@@ -41,41 +39,55 @@ mkdir -p user/default/workflows
 mkdir -p custom_nodes
 
 ########################################
-# 5. Install PyTorch (CUDA 12 compatible)
+# 5. Install PyTorch (CUDA 12.1 wheels)
 ########################################
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 ########################################
-# 6. Download models from RunPod S3 storage
+# 6. Wait for RunPod AWS credentials to become active
 ########################################
 ENDPOINT="https://s3api-eu-ro-1.runpod.io"
 BUCKET="s3://8v3x4ixqu5"
 
+echo "Waiting for AWS credentials..."
+until aws sts get-caller-identity --endpoint-url "$ENDPOINT" >/dev/null 2>&1; do
+    sleep 2
+done
+echo "AWS credentials detected."
+
+########################################
+# 7. Download files (only if missing)
+########################################
+
 # Diffusion model
-aws s3 cp $BUCKET/consolidated_s6700.safetensors models/diffusion_models/ --endpoint-url $ENDPOINT || true
+if [ ! -f models/diffusion_models/consolidated_s6700.safetensors ]; then
+    aws s3 cp "$BUCKET/consolidated_s6700.safetensors" models/diffusion_models/ --endpoint-url "$ENDPOINT"
+fi
 
 # Loras
-aws s3 cp $BUCKET/FluxRealismLora.safetensors models/loras/ --endpoint-url $ENDPOINT || true
-aws s3 cp $BUCKET/FLUX.1-Turbo-Alpha.safetensors models/loras/ --endpoint-url $ENDPOINT || true
-aws s3 cp $BUCKET/flux_realism_lora.safetensors models/loras/ --endpoint-url $ENDPOINT || true
-aws s3 cp $BUCKET/my_first_lora_v1_000002500.safetensors models/loras/ --endpoint-url $ENDPOINT || true
-aws s3 cp $BUCKET/openflux1-v0.1.0-fast-lora.safetensors models/loras/ --endpoint-url $ENDPOINT || true
+[ -f models/loras/FluxRealismLora.safetensors ] || aws s3 cp "$BUCKET/FluxRealismLora.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
+[ -f models/loras/FLUX.1-Turbo-Alpha.safetensors ] || aws s3 cp "$BUCKET/FLUX.1-Turbo-Alpha.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
+[ -f models/loras/flux_realism_lora.safetensors ] || aws s3 cp "$BUCKET/flux_realism_lora.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
+[ -f models/loras/my_first_lora_v1_000002500.safetensors ] || aws s3 cp "$BUCKET/my_first_lora_v1_000002500.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
+[ -f models/loras/openflux1-v0.1.0-fast-lora.safetensors ] || aws s3 cp "$BUCKET/openflux1-v0.1.0-fast-lora.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
 
 # Text encoders
-aws s3 cp $BUCKET/t5xxl_fp16.safetensors models/text_encoders/ --endpoint-url $ENDPOINT || true
-aws s3 cp $BUCKET/clip_g.safetensors models/text_encoders/ --endpoint-url $ENDPOINT || true
-aws s3 cp $BUCKET/ViT-L-14-BEST-smooth-GmP-ft.safetensors models/text_encoders/ --endpoint-url $ENDPOINT || true
+[ -f models/text_encoders/t5xxl_fp16.safetensors ] || aws s3 cp "$BUCKET/t5xxl_fp16.safetensors" models/text_encoders/ --endpoint-url "$ENDPOINT"
+[ -f models/text_encoders/clip_g.safetensors ] || aws s3 cp "$BUCKET/clip_g.safetensors" models/text_encoders/ --endpoint-url "$ENDPOINT"
+[ -f models/text_encoders/ViT-L-14-BEST-smooth-GmP-ft.safetensors ] || aws s3 cp "$BUCKET/ViT-L-14-BEST-smooth-GmP-ft.safetensors" models/text_encoders/ --endpoint-url "$ENDPOINT"
 
 # Workflow
-aws s3 cp $BUCKET/workflow-flux-dev-de-distilled-ultra-realistic-detailed-portraits-at-only-8-steps-turbo-jlUGbGhkafepByeJPeV9-caiman_thirsty_60-openart.ai.json \
-    user/default/workflows/ --endpoint-url $ENDPOINT || true
-
-# Custom nodes
-aws s3 cp $BUCKET/custom_nodes/ custom_nodes/ --recursive --no-clobber --endpoint-url $ENDPOINT || true
+[ -f user/default/workflows/workflow-flux-dev-de-distilled-ultra-realistic-detailed-portraits-at-only-8-steps-turbo.json ] || \
+aws s3 cp "$BUCKET/workflow-flux-dev-de-distilled-ultra-realistic-detailed-portraits-at-only-8-steps-turbo-jlUGbGhkafepByeJPeV9-caiman_thirsty_60-openart.ai.json" \
+    user/default/workflows/ --endpoint-url "$ENDPOINT"
 
 ########################################
-# 7. Start ComfyUI
+# 8. Sync custom nodes (safe, no duplicate downloads)
+########################################
+aws s3 sync "$BUCKET/custom_nodes/" custom_nodes/ --endpoint-url "$ENDPOINT"
+
+########################################
+# 9. Start ComfyUI
 ########################################
 nohup python main.py --listen --port 8188 > comfyui.log 2>&1 &
-
 echo "ComfyUI started on port 8188"
