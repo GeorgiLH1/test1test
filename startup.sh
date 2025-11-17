@@ -33,25 +33,15 @@ git lfs install
 git lfs pull
 
 ########################################
-# 4. Create required folders
-########################################
-mkdir -p models/diffusion_models
-mkdir -p models/loras
-mkdir -p models/text_encoders
-mkdir -p user/default/workflows
-mkdir -p custom_nodes
-
-########################################
-# 5. Install PyTorch (CUDA 12.1)
+# 4. Install PyTorch (CUDA 12.1)
 ########################################
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 ########################################
-# 6. WAIT FOR RUNPOD STORAGE CREDS
+# 5. WAIT FOR RUNPOD STORAGE CREDS
 ########################################
 echo "Waiting for AWS credentials from RunPod..."
 
-# Loop until ALL required vars appear
 while [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ -z "$AWS_ENDPOINT_URL" ]; do
     echo "Still waiting for AWS credentials..."
     sleep 1
@@ -59,35 +49,34 @@ done
 
 echo "AWS credentials detected."
 
-# Assign endpoint AFTER credentials appear
 ENDPOINT="$AWS_ENDPOINT_URL"
 BUCKET="s3://8v3x4ixqu5"
 
 ########################################
-# 7. Download models from S3
+# 6. Download models from S3
 ########################################
 
-# Diffusion model
 aws s3 cp "$BUCKET/consolidated_s6700.safetensors" models/diffusion_models/ --endpoint-url "$ENDPOINT"
 
-# Loras
 aws s3 cp "$BUCKET/FluxRealismLora.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
 aws s3 cp "$BUCKET/FLUX.1-Turbo-Alpha.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
 aws s3 cp "$BUCKET/flux_realism_lora.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
 aws s3 cp "$BUCKET/my_first_lora_v1_000002500.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
 aws s3 cp "$BUCKET/openflux1-v0.1.0-fast-lora.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
 
-# Text encoders
 aws s3 cp "$BUCKET/t5xxl_fp16.safetensors" models/text_encoders/ --endpoint-url "$ENDPOINT"
 aws s3 cp "$BUCKET/clip_g.safetensors" models/text_encoders/ --endpoint-url "$ENDPOINT"
 aws s3 cp "$BUCKET/ViT-L-14-BEST-smooth-GmP-ft.safetensors" models/text_encoders/ --endpoint-url "$ENDPOINT"
 
-# Workflow
 aws s3 cp "$BUCKET/workflow-flux-dev-de-distilled-ultra-realistic-detailed-portraits-at-only-8-steps-turbo-jlUGbGhkafepByeJPeV9-caiman_thirsty_60-openart.ai.json" \
     user/default/workflows/ --endpoint-url "$ENDPOINT"
 
-# Custom nodes folder (full recursive copy)
-aws s3 cp "$BUCKET/custom_nodes/" custom_nodes/ --recursive --endpoint-url "$ENDPOINT"
+########################################
+# 7. SYNC custom_nodes (NO DELETIONS)
+########################################
+
+echo "Syncing custom_nodes without deleting anything..."
+aws s3 sync "$BUCKET/custom_nodes/" custom_nodes/ --exact-timestamps --endpoint-url "$ENDPOINT"
 
 ########################################
 # 8. Start ComfyUI
