@@ -71,7 +71,7 @@ aws s3 cp $BUCKET/workflow-flux-dev-de-distilled-ultra-realistic-detailed-portra
     user/default/workflows/ --endpoint-url $ENDPOINT || true
 
 # Custom nodes
-aws s3 sync $BUCKET/custom_nodes/ custom_nodes/ --endpoint-url $ENDPOINT || true
+aws s3 cp $BUCKET/custom_nodes/ custom_nodes/ --recursive --no-clobber --endpoint-url $ENDPOINT || true
 
 ########################################
 # 7. Start ComfyUI
