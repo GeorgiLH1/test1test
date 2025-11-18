@@ -11,7 +11,7 @@ apt-get update -qq && apt-get install -yq \
 pip install --upgrade pip
 
 ########################################
-# 2. Install AWS CLI v2
+# 2. Install AWS CLI v2 (does nothing now)
 ########################################
 wget -q https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
 unzip -q awscli-exe-linux-x86_64.zip
@@ -33,53 +33,16 @@ git lfs install
 git lfs pull
 
 ########################################
-# 4. Install Python deps (fixes tqdm error) + Torch
+# 4. Install PyTorch (CUDA 12.1 — your current choice)
 ########################################
-# ComfyUI dependencies (tqdm, etc.)
-pip install -r requirements.txt
-
-# GPU Torch for CUDA 12.x image
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 ########################################
-# 5. WAIT FOR RUNPOD STORAGE CREDS
+# 5. Install missing Python modules ComfyUI uses
 ########################################
-echo "Waiting for AWS credentials from RunPod..."
-
-while [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] || [ -z "$AWS_ENDPOINT_URL" ]; do
-    echo "Still waiting for AWS credentials..."
-    sleep 1
-done
-
-echo "AWS credentials detected."
-
-ENDPOINT="$AWS_ENDPOINT_URL"
-BUCKET="s3://8v3x4ixqu5"
+pip install tqdm pillow numpy
 
 ########################################
-# 6. Download models from S3
-########################################
-aws s3 cp "$BUCKET/consolidated_s6700.safetensors" models/diffusion_models/ --endpoint-url "$ENDPOINT"
-
-aws s3 cp "$BUCKET/FluxRealismLora.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
-aws s3 cp "$BUCKET/FLUX.1-Turbo-Alpha.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
-aws s3 cp "$BUCKET/flux_realism_lora.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
-aws s3 cp "$BUCKET/my_first_lora_v1_000002500.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
-aws s3 cp "$BUCKET/openflux1-v0.1.0-fast-lora.safetensors" models/loras/ --endpoint-url "$ENDPOINT"
-
-aws s3 cp "$BUCKET/t5xxl_fp16.safetensors" models/text_encoders/ --endpoint-url "$ENDPOINT"
-aws s3 cp "$BUCKET/clip_g.safetensors" models/text_encoders/ --endpoint-url "$ENDPOINT"
-aws s3 cp "$BUCKET/ViT-L-14-BEST-smooth-GmP-ft.safetensors" models/text_encoders/ --endpoint-url "$ENDPOINT"
-
-aws s3 cp "$BUCKET/workflow-flux-dev-de-distilled-ultra-realistic-detailed-portraits-at-only-8-steps-turbo-jlUGbGhkafepByeJPeV9-caiman_thirsty_60-openart.ai.json" \
-    user/default/workflows/ --endpoint-url "$ENDPOINT"
-
-########################################
-# 7. Download custom_nodes from S3 (one pass, no nesting)
-########################################
-aws s3 sync "$BUCKET/custom_nodes/" custom_nodes/ --endpoint-url "$ENDPOINT"
-
-########################################
-# 8. Start ComfyUI (foreground, script ends here)
+# 6. Run ComfyUI
 ########################################
 python main.py --listen --port 8188
