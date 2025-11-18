@@ -11,7 +11,15 @@ apt-get update -qq && apt-get install -yq \
 pip install --upgrade pip
 
 ########################################
-# 2. Clone or update ComfyUI
+# 2. Install AWS CLI v2
+########################################
+wget -q https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+unzip -q awscli-exe-linux-x86_64.zip
+./aws/install
+rm -rf aws awscli-exe-linux-x86_64.zip
+
+########################################
+# 3. Clone or update ComfyUI
 ########################################
 if [ ! -d "/workspace/ComfyUI" ]; then
     git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
@@ -25,16 +33,16 @@ git lfs install
 git lfs pull
 
 ########################################
-# 3. Install PyTorch (CUDA 12.1)
+# 4. Install PyTorch (correct CUDA version for RunPod)
 ########################################
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
 
 ########################################
-# 4. Install ComfyUI Python dependencies
+# 5. Install missing ComfyUI dependencies
 ########################################
-pip install -r requirements.txt
+pip install safetensors tqdm pillow numpy
 
 ########################################
-# 5. Start ComfyUI
+# 6. Start ComfyUI normally
 ########################################
 python main.py --listen --port 8188
