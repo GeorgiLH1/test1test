@@ -33,11 +33,12 @@ pip install -r /workspace/ComfyUI/requirements.txt
 
 echo "=== Prepare custom_nodes folder ==="
 mkdir -p /workspace/ComfyUI/custom_nodes
+mkdir -p /workspace/ComfyUI/models/diffusion_models
+
+echo "=== Download models from RunPod S3 ==="
+cd /workspace/ComfyUI/models/diffusion_models
+aws s3 cp s3://8v3x4ixqu5/consolidated_s6700.safetensors ./consolidated_s6700.safetensors --endpoint-url https://s3api-eu-ro-1.runpod.io
 
 echo "=== DONE: Starting ComfyUI ==="
 cd /workspace/ComfyUI
 python3 main.py --listen 0.0.0.0 --port 8188
-
-cd /workspace/ComfyUI/diffusion_models
-aws s3 cp s3://8v3x4ixqu5/consolidated_s6700.safetensors ./consolidated_s6700.safetensors --endpoint-url https://s3api-eu-ro-1.runpod.io
-
