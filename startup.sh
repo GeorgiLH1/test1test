@@ -11,15 +11,7 @@ apt-get update -qq && apt-get install -yq \
 pip install --upgrade pip
 
 ########################################
-# 2. Install AWS CLI v2 (does nothing now)
-########################################
-wget -q https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
-unzip -q awscli-exe-linux-x86_64.zip
-./aws/install
-rm -rf aws awscli-exe-linux-x86_64.zip
-
-########################################
-# 3. Clone or update ComfyUI
+# 2. Clone or update ComfyUI
 ########################################
 if [ ! -d "/workspace/ComfyUI" ]; then
     git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
@@ -33,16 +25,16 @@ git lfs install
 git lfs pull
 
 ########################################
-# 4. Install PyTorch (CUDA 12.1 — your current choice)
+# 3. Install PyTorch (CUDA 12.1)
 ########################################
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
 
 ########################################
-# 5. Install missing Python modules ComfyUI uses
+# 4. Install ComfyUI Python dependencies
 ########################################
-pip install tqdm pillow numpy
+pip install -r requirements.txt
 
 ########################################
-# 6. Run ComfyUI
+# 5. Start ComfyUI
 ########################################
 python main.py --listen --port 8188
