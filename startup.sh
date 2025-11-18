@@ -1,48 +1,40 @@
 #!/bin/bash
 
-########################################
-# 1. System packages
-########################################
-apt-get update -qq && apt-get install -yq \
-    python3 python3-pip git git-lfs unzip wget curl vim nano \
-    build-essential ca-certificates libgl1 libglib2.0-0 ffmpeg \
-    libsm6 libxext6 libxrender-dev && apt-get clean
+set -e
 
-pip install --upgrade pip
+echo "=== Updating system packages ==="
+apt-get update -qq
+apt-get install -yq \
+    python3 python3-pip python3-venv \
+    git git-lfs \
+    unzip wget curl \
+    ffmpeg libgl1 libglib2.0-0 \
+    build-essential \
+    ca-certificates \
+    && apt-get clean
 
-########################################
-# 2. Install AWS CLI v2
-########################################
-wget -q https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
-unzip -q awscli-exe-linux-x86_64.zip
+echo "=== Install AWS CLI v2 ==="
+cd /tmp
+curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip -qq awscliv2.zip
 ./aws/install
-rm -rf aws awscli-exe-linux-x86_64.zip
+rm -rf aws awscliv2.zip
+echo "AWS version: $(aws --version)"
 
-########################################
-# 3. Clone or update ComfyUI
-########################################
-if [ ! -d "/workspace/ComfyUI" ]; then
-    git clone https://github.com/comfyanonymous/ComfyUI.git /workspace/ComfyUI
+echo "=== Prepare workspace ==="
+cd /workspace
+if [ ! -d "ComfyUI" ]; then
+    git clone https://github.com/comfyanonymous/ComfyUI.git
 fi
 
+echo "=== Install ComfyUI dependencies ==="
+pip install --upgrade pip
+pip install -r /workspace/ComfyUI/requirements.txt
+
+echo "=== Prepare custom_nodes folder ==="
+mkdir -p /workspace/ComfyUI/custom_nodes
+
+echo "=== DONE: Starting ComfyUI ==="
 cd /workspace/ComfyUI
+python3 main.py --listen 0.0.0.0 --port 8188
 
-git config --global --add safe.directory /workspace/ComfyUI
-git pull
-git lfs install
-git lfs pull
-
-########################################
-# 4. Install PyTorch (correct CUDA version for RunPod)
-########################################
-pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
-
-########################################
-# 5. Install missing ComfyUI dependencies
-########################################
-pip install safetensors tqdm pillow numpy
-
-########################################
-# 6. Start ComfyUI normally
-########################################
-python main.py --listen --port 8188
