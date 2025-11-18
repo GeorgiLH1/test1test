@@ -73,11 +73,11 @@ aws s3 cp "$BUCKET/workflow-flux-dev-de-distilled-ultra-realistic-detailed-portr
 ########################################
 # 7. Download custom_nodes (NO LOOP FIX)
 ########################################
-aws s3 cp "$BUCKET/custom_nodes" custom_nodes/ \
-    --recursive \
-    --exclude ".git/*" \
-    --exclude ".git*" \
-    --endpoint-url "$ENDPOINT"
+#aws s3 cp "$BUCKET/custom_nodes" custom_nodes/ \
+#    --recursive \
+#    --exclude ".git/*" \
+#    --exclude ".git*" \
+#    --endpoint-url "$ENDPOINT"
 
 ########################################
 # 8. Start ComfyUI
