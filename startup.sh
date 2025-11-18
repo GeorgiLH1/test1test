@@ -73,8 +73,7 @@ aws s3 cp "$BUCKET/workflow-flux-dev-de-distilled-ultra-realistic-detailed-portr
 ########################################
 # 7. Download custom_nodes (NO LOOP FIX)
 ########################################
-echo "Downloading custom_nodes safely (loop-free)..."
-aws s3 cp "$BUCKET/custom_nodes/" custom_nodes/ \
+aws s3 cp "$BUCKET/custom_nodes" custom_nodes/ \
     --recursive \
     --exclude ".git/*" \
     --exclude ".git*" \
