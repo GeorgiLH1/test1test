@@ -19,7 +19,6 @@ unzip -qq awscliv2.zip
 ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
 rm -rf aws awscliv2.zip
 
-aws --version
 echo "=== Prepare workspace ==="
 cd /workspace
 if [ ! -d "ComfyUI" ]; then
@@ -29,10 +28,6 @@ fi
 echo "=== Install ComfyUI dependencies ==="
 pip install --upgrade pip
 pip install -r /workspace/ComfyUI/requirements.txt
-
-echo "=== Prepare custom_nodes folder ==="
-mkdir -p /workspace/ComfyUI/custom_nodes
-mkdir -p /workspace/ComfyUI/models/diffusion_models
 
 echo "=== Download models from RunPod S3 ==="
 cd /workspace/ComfyUI/models/diffusion_models
