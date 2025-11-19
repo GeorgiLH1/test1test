@@ -14,20 +14,12 @@ apt-get install -yq \
     && apt-get clean
 
 echo "=== Install AWS CLI v2 ==="
-cd /tmp
-
-# remove old AWS CLI to avoid interactive prompt
-rm -rf /usr/local/aws-cli
-rm -f /usr/local/bin/aws
-
 curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip -qq awscliv2.zip
-
 ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
-
 rm -rf aws awscliv2.zip
-echo "AWS version: $(aws --version)"
 
+aws --version
 echo "=== Prepare workspace ==="
 cd /workspace
 if [ ! -d "ComfyUI" ]; then
