@@ -17,7 +17,7 @@ echo "=== Install AWS CLI v2 ==="
 cd /tmp
 curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip -qq awscliv2.zip
-./aws/install
+./aws/install --update --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --clean
 rm -rf aws awscliv2.zip
 echo "AWS version: $(aws --version)"
 
