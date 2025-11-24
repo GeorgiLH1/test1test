@@ -48,38 +48,7 @@ if [ -f "/workspace/ComfyUI/requirements.txt" ]; then
     pip install -r /workspace/ComfyUI/requirements.txt --no-cache-dir || echo "Warning: Some pip requirements failed, continuing..."
 fi
 
-# ==============================================================================
-# STEP 4.5: SYNC CUSTOM NODES FROM S3
-# ==============================================================================
-echo "=== 4.5 Syncing Custom Nodes from S3 ==="
-CUSTOM_NODES_DIR="/workspace/ComfyUI/custom_nodes"
 
-# Ensure directory exists before syncing
-mkdir -p "$CUSTOM_NODES_DIR"
-
-echo "Syncing from s3://${BUCKET_NAME}/${S3_CUSTOM_NODES_PATH} to ${CUSTOM_NODES_DIR}..."
-
-# We use 'sync' to merge S3 content into the local folder.
-# --delete removes files locally that are NOT in S3 (keeping it exact mirror)
-aws s3 sync "s3://${BUCKET_NAME}/${S3_CUSTOM_NODES_PATH}" "$CUSTOM_NODES_DIR" \
-    --endpoint-url "$RUNPOD_S3_ENDPOINT" \
-    --delete
-
-# Check if sync was successful
-if [ $? -eq 0 ]; then
-    echo "   [SUCCESS] Custom nodes synced."
-    
-    # Automatically scan for requirements.txt in the new folders and install them
-    echo "   [INSTALLING] Checking for custom node requirements.txt files..."
-    find "$CUSTOM_NODES_DIR" -name "requirements.txt" | while read req_file; do
-        echo "   >> Installing dependencies for: $req_file"
-        pip install -r "$req_file" --no-cache-dir || echo "   [WARNING] Failed to install for $req_file"
-    done
-else
-    echo "   [ERROR] Failed to sync custom nodes. Check if folder exists in S3."
-    # We do NOT stop the script here, we allow it to continue to models.
-fi
-# ==============================================================================
 
 # --- HELPER FUNCTION FOR DOWNLOADS ---
 download_if_missing() {
