@@ -48,7 +48,9 @@ if [ -f "/workspace/ComfyUI/requirements.txt" ]; then
     pip install -r /workspace/ComfyUI/requirements.txt --no-cache-dir || echo "Warning: Some pip requirements failed, continuing..."
 fi
 
-
+#=====Install Nodes=======
+cd workspace/ComfyUI/custom_nodes
+git clone https://github.com/Acly/comfyui-tooling-nodes.git
 
 # --- HELPER FUNCTION FOR DOWNLOADS ---
 download_if_missing() {
@@ -76,6 +78,12 @@ download_if_missing() {
 }
 
 echo "=== 5. Download models from RunPod S3 ==="
+
+# --- VAE ---
+echo "--- Checking vaes ---"
+VAE_DIR="/workspace/ComfyUI/models/vae"
+
+download_if_missing "ae.safetensors" "ae.safetensors" "$VAE_DIR"
 
 # --- Checkpoints ---
 echo "--- Checking Checkpoints ---"
