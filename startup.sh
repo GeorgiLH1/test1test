@@ -80,11 +80,17 @@ download_if_missing() {
 
 echo "=== 5. Download models from RunPod S3 ==="
 
-# --- VAE ---
+# --- VAEs ---
 echo "--- Checking vaes ---"
 VAE_DIR="/workspace/ComfyUI/models/vae"
 
 download_if_missing "ae.safetensors" "ae.safetensors" "$VAE_DIR"
+
+# --- Upscalers ---
+echo "--- Checking Upscalers ---" 
+UPSCALE_DIR="/workspace/ComfyUI/models/upscale_models
+
+donwload_if_missing "4x-UltraSharp.pth" "4x-UltraSharp.pth" "$UPSCALE_DIR"
 
 # --- Checkpoints ---
 echo "--- Checking Checkpoints ---"
