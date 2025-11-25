@@ -49,7 +49,7 @@ if [ -f "/workspace/ComfyUI/requirements.txt" ]; then
 fi
 
 #=====Install Nodes=======
-cd workspace/ComfyUI/custom_nodes
+cd /workspace/ComfyUI/custom_nodes
 git clone https://github.com/Acly/comfyui-tooling-nodes.git
 git clone https://github.com/Comfy-Org/ComfyUI-Manager.git
 
